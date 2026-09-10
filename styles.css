@@ -1,0 +1,87 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: yellowgreen;
+}
+
+#game-field {
+    margin: 20px 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    justify-items: center;
+}
+
+.hand-container {
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+    height: 140px;
+}
+
+.hand-box,
+.field-box {
+    width: 120px;
+    height: 120px;
+    margin: 0;
+    background-color: darkgrey;
+    border: solid 5px rgb(128, 128, 128);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+p {
+    margin: 0;
+}
+
+.top {
+    grid-column-start: 2;
+    text-align: center;
+    align-self: start;
+}
+
+.left {
+    grid-row-start: 2;
+    text-align: start;
+    align-self: center;
+}
+
+.right {
+    grid-column-start: 3;
+    grid-row-start: 2;
+    text-align: end;
+    align-self: center;
+}
+
+.bottom {
+    grid-column-start: 2;
+    grid-row-start: 3;
+    text-align: center;
+    align-self: end;
+}
+
+.name {
+    grid-column-start: 2;
+    grid-row-start: 2;
+    text-align: center;
+    align-self: center;
+}
+
+.color-e {
+    background-color: deeppink;
+    border: solid 5px palevioletred;
+}
+
+.color-p {
+    background-color: aqua;
+    border: solid 5px darkcyan;
+}
+
+.selected {
+    border: solid 5px black;
+}
