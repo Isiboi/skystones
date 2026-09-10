@@ -19,14 +19,13 @@ body {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    gap: 20px;
-    height: 140px;
+    gap: 10px;
 }
 
 .hand-box,
 .field-box {
-    width: 120px;
     height: 120px;
+    aspect-ratio: 1 / 1;
     margin: 0;
     background-color: darkgrey;
     border: solid 5px rgb(128, 128, 128);
@@ -37,6 +36,7 @@ body {
 
 p {
     margin: 0;
+    font-size: 1rem;
 }
 
 .top {
@@ -84,4 +84,18 @@ p {
 
 .selected {
     border: solid 5px black;
+}
+
+@media (max-width: 800px) {
+    .hand-container {
+        flex-wrap: wrap;
+    }
+
+    .hand-box,
+    .field-box {
+        height: 100px;
+        aspect-ratio: 1 / 1;
+        border: solid 2px rgb(128, 128, 128);
+        font-size: smaller;
+    }
 }

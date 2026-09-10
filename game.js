@@ -85,35 +85,11 @@ function flipTurn() {
     if (currentTurn === "e") { computerTurn(); }
 }
 
-function computerTurn() {
-    if (gameOver === true) { return; };
-    let decision = computerDecisionsZero();
-    if (computerDifficultyLevel == 1) {
-        decision = computerDecisionsOne();
-    }
-    playCard(decision[0], decision[1], enemyHand);
-    renderHand(enemyHand, "#enemy-hand", "enemy");
-    flipTurn();
-}
-
-function computerDecisionsZero() {
-    const emptyTiles = getEmptyTiles();
-    const chosenIndex = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
-    const randomCardIndex = Math.floor(Math.random() * enemyHand.length);
-    return [randomCardIndex, chosenIndex];
-}
-
-function computerDecisionsOne() {
-    const emptyTiles = getEmptyTiles();
-    const chosenIndex = 0;
-    const randomCardIndex = 0;
-    return [randomCardIndex, chosenIndex];
-}
-
-function playCard(card, gamePos, hand) {
-    gameBoard[gamePos] = hand[card];
-    hand.splice(card, 1);
-    attackNeighbors(gamePos);
+function playCard(cardIndex, tileIndex, hand) {
+    let cardsDefeatedIndexes = targetNeighbors(hand[cardIndex], tileIndex);
+    for (let i = 0; i < cardsDefeatedIndexes.length; i++) { gameBoard[cardsDefeatedIndexes[i]].owner = hand[cardIndex].owner; }
+    gameBoard[tileIndex] = hand[cardIndex];
+    hand.splice(cardIndex, 1);
     renderGamefield(gameBoard, "#game-field");
     if (getEmptyTiles().length === 0) { gameOver = true; }
 }
@@ -124,6 +100,43 @@ function getEmptyTiles() {
     return emptyIndex;
 }
 
+function computerTurn() {
+    if (gameOver === true) { return; };
+    let decision = {};
+    if (computerDifficultyLevel == 0) {
+        decision = computerDecisionsZero();
+    }
+    else if (computerDifficultyLevel == 1) {
+        decision = computerDecisionsOne(computerDecisionsZero());
+    }
+    playCard(decision.cardIndex, decision.tileIndex, enemyHand);
+    renderHand(enemyHand, "#enemy-hand", "enemy");
+    flipTurn();
+}
+
+function computerDecisionsZero() {
+    let randomMove = {};
+    randomMove.cardIndex = Math.floor(Math.random() * enemyHand.length);
+    const emptyTiles = getEmptyTiles();
+    randomMove.tileIndex = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+    randomMove.flips = 0;
+    return randomMove;
+}
+
+function computerDecisionsOne(defaultPick) {
+    const emptyTiles = getEmptyTiles();
+    let bestMove = defaultPick;
+
+    enemyHand.forEach((card, cardIndex) => {
+        emptyTiles.forEach((tileIndex) => {
+            const flips = targetNeighbors(card, tileIndex).length;
+            if (flips > bestMove.flips) {
+                bestMove = { cardIndex, tileIndex, flips };
+            }
+        });
+    });
+    return bestMove;
+}
 
 function getNeighbors(index) {
     let neighbors = {};
@@ -134,23 +147,26 @@ function getNeighbors(index) {
     return neighbors;
 }
 
-function attackNeighbors(cardIndex) {
+function targetNeighbors(card, tileIndex) {
+    let cardsDeafetedIndexes = [];
     const opposite = {
         top: "bottom",
         left: "right",
         right: "left",
         bottom: "top",
     }
-    const neighbors = getNeighbors(cardIndex);
+    const neighbors = getNeighbors(tileIndex);
 
-    Object.keys(neighbors).forEach(function (keyName) {
-        if (gameBoard[neighbors[keyName]] != null
-            && gameBoard[neighbors[keyName]].owner !== gameBoard[cardIndex].owner
-            && gameBoard[cardIndex][keyName] > gameBoard[neighbors[keyName]][opposite[keyName]]) {
-            console.log(`${gameBoard[cardIndex].owner} has taken a card from ${gameBoard[neighbors[keyName]].owner}`)
-            gameBoard[neighbors[keyName]].owner = gameBoard[cardIndex].owner;
+    Object.keys(neighbors).forEach(function (atkDir) {
+        if (gameBoard[neighbors[atkDir]] != null
+            && gameBoard[neighbors[atkDir]].owner !== card.owner
+            && card[atkDir] > gameBoard[neighbors[atkDir]][opposite[atkDir]]) {
+            cardsDeafetedIndexes.push(neighbors[atkDir]);
         }
+
+
     });
+    return cardsDeafetedIndexes;
 }
 
 function matchStart() {
