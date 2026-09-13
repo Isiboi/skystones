@@ -1,10 +1,25 @@
-let playerHand = [];
-let enemyHand = [];
-let gameBoard = [];
-let choosenCard = null;
-let currentTurn = "e";
-let gameOver = false;
-let computerDifficultyLevel = 1;
+const difficulties = ["random", "greedy"];
+
+const selectors = {
+    player_hand: "player-hand",
+    enemy_hand: "enemy-hand",
+    game_board: "game-field",
+    title_text: "main-text",
+    difficulty: "difficulty-text",
+    score_counter: "score-text",
+    score_player: "score-player",
+    score_enemy: "score-enemy"
+};
+
+const gameState = {
+    playerHand: [],
+    enemyHand: [],
+    gameBoard: [],
+    playerTurn: false,
+    gameOver: true,
+    choosenCard: null,
+    difficulty: 1,
+}
 
 function generateHand(whoOwnsIt) {
     let newHand = [];
@@ -13,7 +28,6 @@ function generateHand(whoOwnsIt) {
         const card = { ...template, owner: whoOwnsIt };
         newHand.push(card);
     };
-    console.log(newHand);
     return newHand;
 }
 
@@ -27,12 +41,11 @@ function renderCard(card) {
         `;
 }
 
-/* Ritar kort handen */
-function renderHand(arr, conSelect, target) {
-    const container = document.querySelector(conSelect);
+function renderHand(arr, conSelect) {
+    const container = document.getElementById(conSelect);
     container.innerHTML = "";
 
-    if (target === "player") {
+    if (arr === gameState.playerHand) {
         arr.forEach(function (card, index) {
             const box = document.createElement('div');
             box.className = `hand-box color-${card.owner}`;
@@ -40,18 +53,17 @@ function renderHand(arr, conSelect, target) {
             box.addEventListener('click', function () { selectCard(box, index); });
             container.appendChild(box);
         });
-    } else if (target === "enemy") {
+    } else if (arr === gameState.enemyHand) {
         arr.forEach(function (card, index) {
             const box = document.createElement('div');
             box.className = `hand-box color-${card.owner}`;
             container.appendChild(box);
         });
     }
-
 }
 
 function renderGamefield(arr, conSelect) {
-    const container = document.querySelector(conSelect);
+    const container = document.getElementById(conSelect);
     container.innerHTML = ''; // wipe it clean
 
     arr.forEach(function (card, index) {
@@ -65,69 +77,81 @@ function renderGamefield(arr, conSelect) {
 }
 
 function selectCard(element, arrIndex) {
-    if (currentTurn === "e") { return; }
-    if (choosenCard === arrIndex) { element.classList.remove('selected'); choosenCard = null; return; }
+    if (!gameState.playerTurn) { return; }
+    if (gameState.choosenCard === arrIndex) { element.classList.remove('selected'); gameState.choosenCard = null; return; }
     document.querySelectorAll('#player-hand .hand-box').forEach(box => box.classList.remove('selected'));
     element.classList.add('selected');
-    choosenCard = arrIndex;
+    gameState.choosenCard = arrIndex;
 }
 
 function selectBox(arrIndex) {
-    if (currentTurn !== "p") { return; }; if (choosenCard === null) { return; }; if (!getEmptyTiles().includes(arrIndex)) { return; }; if (gameOver === true) { return; };
-    playCard(choosenCard, arrIndex, playerHand);
-    choosenCard = null;
-    renderHand(playerHand, "#player-hand", "player");
+    if (!gameState.playerTurn) { return; }; if (gameState.choosenCard === null) { return; }; if (!getEmptyTiles().includes(arrIndex)) { return; }; if (gameState.gameOver === true) { return; };
     flipTurn();
+    playCard(gameState.choosenCard, arrIndex, gameState.playerHand);
+    gameState.choosenCard = null;
+    renderHand(gameState.playerHand, selectors.player_hand);
+
 }
 
 function flipTurn() {
-    currentTurn = (currentTurn === "p") ? "e" : "p";
-    if (currentTurn === "e") { computerTurn(); }
+    gameState.playerTurn = (gameState.playerTurn) ? false : true;
+    if (!gameState.playerTurn) { setTimeout(function () { computerTurn(); }, 2000); }
 }
 
 function playCard(cardIndex, tileIndex, hand) {
     let cardsDefeatedIndexes = targetNeighbors(hand[cardIndex], tileIndex);
-    for (let i = 0; i < cardsDefeatedIndexes.length; i++) { gameBoard[cardsDefeatedIndexes[i]].owner = hand[cardIndex].owner; }
-    gameBoard[tileIndex] = hand[cardIndex];
+    gameState.gameBoard[tileIndex] = hand[cardIndex];
     hand.splice(cardIndex, 1);
-    renderGamefield(gameBoard, "#game-field");
-    if (getEmptyTiles().length === 0) { gameOver = true; }
+    renderGamefield(gameState.gameBoard, selectors.game_board);
+    let scores = calcScore();
+    document.getElementById(selectors.score_player).innerHTML = scores.playerIndex.length;
+    document.getElementById(selectors.score_enemy).innerHTML = scores.enemyIndex.length;
+
+    for (let i = 0; i < cardsDefeatedIndexes.length; i++) { gameState.gameBoard[cardsDefeatedIndexes[i]].owner = gameState.gameBoard[tileIndex].owner; }
+    setTimeout(function () {
+        renderGamefield(gameState.gameBoard, selectors.game_board);
+        scores = calcScore();
+        document.getElementById(selectors.score_player).innerHTML = scores.playerIndex.length;
+        document.getElementById(selectors.score_enemy).innerHTML = scores.enemyIndex.length;
+    }, 300);
+    if (getEmptyTiles().length === 0) { endGame(); }
 }
+
+function endGame() { gameState.gameOver = true; document.getElementById(selectors.title_text).innerHTML = "Game End (click to restart)"; }
 
 function getEmptyTiles() {
     const emptyIndex = [];
-    gameBoard.forEach((tile, index) => { if (tile === null) emptyIndex.push(index); });
+    gameState.gameBoard.forEach((tile, index) => { if (tile === null) emptyIndex.push(index); });
     return emptyIndex;
 }
 
 function computerTurn() {
-    if (gameOver === true) { return; };
+    if (gameState.gameOver === true) { return; };
     let decision = {};
-    if (computerDifficultyLevel == 0) {
-        decision = computerDecisionsZero();
+    if (gameState.difficulty == 0) {
+        decision = decisionRandom();
     }
-    else if (computerDifficultyLevel == 1) {
-        decision = computerDecisionsOne(computerDecisionsZero());
+    else if (gameState.difficulty == 1) {
+        decision = decisionGreedy(decisionRandom());
     }
-    playCard(decision.cardIndex, decision.tileIndex, enemyHand);
-    renderHand(enemyHand, "#enemy-hand", "enemy");
-    flipTurn();
+    playCard(decision.cardIndex, decision.tileIndex, gameState.enemyHand);
+    setTimeout(function () { flipTurn();; }, 400);
 }
 
-function computerDecisionsZero() {
+function decisionRandom() {
     let randomMove = {};
-    randomMove.cardIndex = Math.floor(Math.random() * enemyHand.length);
+    randomMove.cardIndex = Math.floor(Math.random() * gameState.enemyHand.length);
     const emptyTiles = getEmptyTiles();
     randomMove.tileIndex = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
     randomMove.flips = 0;
     return randomMove;
 }
 
-function computerDecisionsOne(defaultPick) {
+function decisionGreedy(defaultPick) {
     const emptyTiles = getEmptyTiles();
     let bestMove = defaultPick;
 
-    enemyHand.forEach((card, cardIndex) => {
+    gameState.enemyHand.forEach((card, cardIndex) => {
         emptyTiles.forEach((tileIndex) => {
             const flips = targetNeighbors(card, tileIndex).length;
             if (flips > bestMove.flips) {
@@ -158,25 +182,33 @@ function targetNeighbors(card, tileIndex) {
     const neighbors = getNeighbors(tileIndex);
 
     Object.keys(neighbors).forEach(function (atkDir) {
-        if (gameBoard[neighbors[atkDir]] != null
-            && gameBoard[neighbors[atkDir]].owner !== card.owner
-            && card[atkDir] > gameBoard[neighbors[atkDir]][opposite[atkDir]]) {
+        if (gameState.gameBoard[neighbors[atkDir]] != null
+            && gameState.gameBoard[neighbors[atkDir]].owner !== card.owner
+            && card[atkDir] > gameState.gameBoard[neighbors[atkDir]][opposite[atkDir]]) {
             cardsDeafetedIndexes.push(neighbors[atkDir]);
         }
-
-
     });
     return cardsDeafetedIndexes;
 }
 
 function matchStart() {
-    playerHand = generateHand("p");
-    renderHand(playerHand, "#player-hand", "player");
-    enemyHand = generateHand("e");
-    renderHand(enemyHand, "#enemy-hand", "enemy");
-    for (let i = 0; i < 9; i++) { gameBoard.push(null); }
-    renderGamefield(gameBoard, "#game-field");
+    if (!gameState.gameOver) { return; }
+    gameState.gameOver = false;
+    gameState.playerHand = generateHand("p");
+    renderHand(gameState.playerHand, selectors.player_hand);
+    gameState.enemyHand = generateHand("e");
+    gameState.gameBoard = [];
+    for (let i = 0; i < 9; i++) { gameState.gameBoard.push(null); }
+    renderGamefield(gameState.gameBoard, selectors.game_board);
     computerTurn();
+    document.getElementById(selectors.title_text).innerHTML = `Playing`
 }
 
-matchStart();
+function difficultyIncrease() { if (gameState.difficulty + 1 < difficulties.length) { gameState.difficulty++; document.getElementById(selectors.difficulty).innerHTML = `Difficulty ${gameState.difficulty}`; } }
+function difficultyDecrease() { if (gameState.difficulty > 0) { gameState.difficulty--; document.getElementById(selectors.difficulty).innerHTML = `Difficulty ${gameState.difficulty}`; } }
+
+function calcScore() {
+    const scoreIndex = { playerIndex: [], enemyIndex: [] }
+    gameState.gameBoard.forEach(function (tile, index) { if (tile == null) { return; } if (tile.owner === "e") { scoreIndex.enemyIndex.push(index) } else if (tile.owner === "p") { scoreIndex.playerIndex.push(index) } })
+    return scoreIndex;
+}

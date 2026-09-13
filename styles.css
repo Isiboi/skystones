@@ -5,6 +5,17 @@ body {
     background-color: yellowgreen;
 }
 
+header {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: baseline;
+
+    & p {
+        font-size: 1.5rem;
+    }
+}
+
 #game-field {
     margin: 20px 0;
     display: grid;
@@ -24,14 +35,14 @@ body {
 
 .hand-box,
 .field-box {
-    height: 120px;
+    height: 110px;
     aspect-ratio: 1 / 1;
     margin: 0;
     background-color: darkgrey;
     border: solid 5px rgb(128, 128, 128);
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
 }
 
 p {
@@ -73,8 +84,8 @@ p {
 }
 
 .color-e {
-    background-color: deeppink;
-    border: solid 5px palevioletred;
+    background-color: palevioletred;
+    border: solid 5px firebrick;
 }
 
 .color-p {
@@ -88,14 +99,29 @@ p {
 
 @media (max-width: 800px) {
     .hand-container {
-        flex-wrap: wrap;
+        gap: 2px 5px;
+
     }
 
-    .hand-box,
     .field-box {
-        height: 100px;
+        height: 95px;
         aspect-ratio: 1 / 1;
-        border: solid 2px rgb(128, 128, 128);
-        font-size: smaller;
+        border: solid 3px rgb(128, 128, 128);
+        font-size: 0.7rem;
+    }
+
+    .hand-box {
+        height: 60px;
+        aspect-ratio: 1 / 1;
+        border: solid 3px rgb(128, 128, 128);
+        font-size: 0.5rem;
+    }
+
+    #game-field {
+        margin-top: 20px;
+    }
+
+    .name {
+        display: none;
     }
 }
