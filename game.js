@@ -8,7 +8,8 @@ const selectors = {
     difficulty: "difficulty-text",
     score_counter: "score-text",
     score_player: "score-player",
-    score_enemy: "score-enemy"
+    score_enemy: "score-enemy",
+    player_wins: "win-player",
 };
 
 const gameState = {
@@ -18,7 +19,8 @@ const gameState = {
     playerTurn: false,
     gameOver: true,
     choosenCard: null,
-    difficulty: 1,
+    difficulty: 0,
+    playerWins: 0,
 }
 
 function generateHand(whoOwnsIt) {
@@ -117,7 +119,18 @@ function playCard(cardIndex, tileIndex, hand) {
     if (getEmptyTiles().length === 0) { endGame(); }
 }
 
-function endGame() { gameState.gameOver = true; document.getElementById(selectors.title_text).innerHTML = "Game End (click to restart)"; }
+function endGame() {
+    gameState.gameOver = true;
+    let score = calcScore();
+    let didPlayerWin = score.playerIndex.length > score.enemyIndex.length;
+    if (didPlayerWin) {
+        document.getElementById(selectors.title_text).innerHTML = "You Won (click to restart)";
+        gameState.playerWins++;
+        document.getElementById(selectors.player_wins).innerHTML = gameState.playerWins;
+    } else {
+        document.getElementById(selectors.title_text).innerHTML = "You lost (click to restart)";
+    }
+}
 
 function getEmptyTiles() {
     const emptyIndex = [];
@@ -193,6 +206,7 @@ function targetNeighbors(card, tileIndex) {
 
 function matchStart() {
     if (!gameState.gameOver) { return; }
+    gameState.playerTurn = false;
     gameState.gameOver = false;
     gameState.playerHand = generateHand("p");
     renderHand(gameState.playerHand, selectors.player_hand);
@@ -201,7 +215,7 @@ function matchStart() {
     for (let i = 0; i < 9; i++) { gameState.gameBoard.push(null); }
     renderGamefield(gameState.gameBoard, selectors.game_board);
     computerTurn();
-    document.getElementById(selectors.title_text).innerHTML = `Playing`
+    document.getElementById(selectors.title_text).innerHTML = ``
 }
 
 function difficultyIncrease() { if (gameState.difficulty + 1 < difficulties.length) { gameState.difficulty++; document.getElementById(selectors.difficulty).innerHTML = `Difficulty ${gameState.difficulty}`; } }

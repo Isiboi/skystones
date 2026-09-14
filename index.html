@@ -12,8 +12,15 @@
 <body>
     <header>
         <h1 id="main-text" onclick="matchStart()">Click to start game</h1>
-        <p id="score-text">Score: <span id="score-player">0</span> - <span id="score-enemy">0</span></p>
-        <p id="difficulty-text">Difficulty: </p>
+        <div id="score-bar" class="bar">
+            <p id="score-text">Score: <span id="score-player">0</span> - <span id="score-enemy">0</span></p>
+        </div>
+        <div id="win-bar" class="bar">
+            <p id="win-text">Wins: <span id="win-player">0</span></p>
+        </div>
+        <div id="difficulty-bar" class="bar">
+            <p id="difficulty-text">Difficulty 0</p>
+        </div>
         <span class="material-icons" id="difficulty-upp" onclick="difficultyIncrease()">arrow_upward</span>
         <span class="material-icons" id="difficulty-down" onclick="difficultyDecrease()">arrow_downward</span>
 
